@@ -1,10 +1,14 @@
+from jupyter_core.paths import jupyter_data_dir
+import subprocess
 import os
+import errno
+import stat
 from IPython.lib import passwd
 
 c = get_config()
 c.NotebookApp.ip = "*"
 c.NotebookApp.open_browser = False
-c.NotebookApp.port = 8888
+c.NotebookApp.port = 8443
 
 # https://github.com/jupyter/notebook/issues/3130
 c.FileContentsManager.delete_to_trash = False
