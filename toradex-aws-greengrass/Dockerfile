@@ -1,27 +1,4 @@
-FROM torizon/arm64v8-debian-wayland-base-vivante as greengrass-base
-
-ARG GREENGRASS_RELEASE_URL=https://d1onfpft10uf5o.cloudfront.net/greengrass-core/downloads/1.10.0/greengrass-linux-aarch64-1.10.0.tar.gz                                                            
-RUN apt-get -y update && apt-get -y install wget && wget $GREENGRASS_RELEASE_URL
-RUN apt-get -y update && apt-get -y install default-jdk-headless python3.7 python3-pip
-
-RUN pip3 install greengrasssdk
-
-# Copy Greengrass Licenses AWS IoT Greengrass Docker Image
-COPY greengrass-license-v1.pdf /
-# Copy start-up script
-COPY "greengrass-entrypoint.sh" /
-
-# Setup Greengrass inside Docker Image                                                                                                                                                              
-RUN export GREENGRASS_RELEASE=$(basename $GREENGRASS_RELEASE_URL) && \                                                                                                                              
-    tar xzf $GREENGRASS_RELEASE -C / && \                                                                                                                                                           
-    rm $GREENGRASS_RELEASE && \                                                                                                                                                                     
-    useradd -r ggc_user && \                                                                                                                                                                        
-    groupadd -r ggc_group                                                                                                                                                                           
-                                                                                                                                                                                                    
-# Expose 8883 to pub/sub MQTT messages                                                                                                                                                              
-EXPOSE 8883                               
-
-FROM greengrass-base as mli
+FROM torizon/arm64v8-debian-wayland-base-vivante as base
 WORKDIR /home/torizon
 
 #### INSTALL DEPENDENCIES ####
@@ -35,7 +12,7 @@ RUN apt-get -y update && apt-get install -y \
     && apt-get clean && apt-get autoremove
 
 RUN apt-get -y update && apt-get install -y \
-    python3-dev libatlas-base-dev \
+    python3 python3-pip python3-dev libatlas-base-dev \
     cmake build-essential gcc g++ git \
     && apt-get clean && apt-get autoremove
 
@@ -47,9 +24,6 @@ RUN apt-get install -y libtiff5-dev libopenjp2-7-dev zlib1g-dev \
 RUN pip3 install Pillow
 
 RUN pip3 install numpy
-
-FROM greengrass-base as opencv
-WORKDIR /home/torizon           
 
 #### INSTALL OPENCV ####
 RUN apt-get -y update && apt-get install -y \
@@ -80,9 +54,6 @@ RUN cd opencv && git checkout 4.2.0 && mkdir -p build && cd build && cmake \
   ../ && make -j`nproc` && make install
 # -DWITH_OPENMP=ON not working even when installing libgomp1 and libomp-dev. Tentative: Re-build llvm with OpenMP support - ImportError: /usr/lib/aarch64-linux-gnu/libgomp.so.1: cannot allocate memory in static TLS block
 
-FROM greengrass-base as gstreamer
-WORKDIR /home/torizon           
-
 #### INSTALL GSTREAMER ####
 RUN apt-get -y update && apt-get install -y \
     libgstreamer1.0-0 gstreamer1.0-plugins-base \
@@ -92,14 +63,35 @@ RUN apt-get -y update && apt-get install -y \
     gstreamer1.0-pulseaudio v4l-utils python3-gst-1.0 \
     && apt-get clean && apt-get autoremove
 
-FROM greengrass-base as dlr
-WORKDIR /home/torizon           
-
 #### INSTALL DLR ####
 RUN apt install -y build-essential cmake git
 RUN git clone --recursive https://github.com/neo-ai/neo-ai-dlr.git
 RUN cd neo-ai-dlr;mkdir build;cd build;cmake ..;make -j`nproc`
-RUN cd neo-ai-dlr/python;python3 setup.py install
+RUN cd neo-ai-dlr/python;python3 setup.py install --user
 
 RUN pip3 install requests flask flask_restful flask_cors \
   && apt-get clean && apt-get autoremove
+
+FROM base as greengrass
+
+ARG GREENGRASS_RELEASE_URL=https://d1onfpft10uf5o.cloudfront.net/greengrass-core/downloads/1.10.0/greengrass-linux-aarch64-1.10.0.tar.gz                                                            
+RUN apt-get -y update && apt-get -y install wget && wget $GREENGRASS_RELEASE_URL
+RUN apt-get -y update && apt-get -y install default-jdk-headless python3.7 python3-pip
+
+RUN pip3 install greengrasssdk
+
+# Setup Greengrass inside Docker Image                                                                                                                                                              
+RUN export GREENGRASS_RELEASE=$(basename $GREENGRASS_RELEASE_URL) && \                                                                                                                              
+    tar xzf $GREENGRASS_RELEASE -C / && \                                                                                                                                                           
+    rm $GREENGRASS_RELEASE && \                                                                                                                                                                     
+    useradd -r ggc_user && \                                                                                                                                                                        
+    groupadd -r ggc_group                                                                                                                                                                           
+                                                                                                                                                                                                    
+# Expose 8883 to pub/sub MQTT messages                                                                                                                                                              
+EXPOSE 8883                               
+
+# Copy Greengrass Licenses AWS IoT Greengrass Docker Image
+COPY greengrass-license-v1.pdf /
+# Copy start-up script
+COPY "greengrass-entrypoint.sh" /
+
