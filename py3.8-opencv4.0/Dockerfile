@@ -14,8 +14,7 @@ RUN apt-get install -y libjpeg-dev libpng-dev libtiff-dev
 # Video/Audio Libs - FFMPEG, GSTREAMER, x264 and so on.
 RUN apt-get install -y libavcodec-dev libavformat-dev libswscale-dev libavresample-dev \
     libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-    libxvidcore-dev x264 libx264-dev libfaac-dev libmp3lame-dev libtheora-dev \
-    libmp3lame-dev
+    libxvidcore-dev x264 libx264-dev libmp3lame-dev libtheora-dev
 
 # Cameras programming interface libs
 # RUN apt-get install -y libdc1394-22 libdc1394-22-dev libxine2-dev libv4l-dev v4l-utils
