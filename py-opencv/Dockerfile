@@ -63,3 +63,5 @@ RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
 RUN make -j `$(grep -c processor /proc/cpuinfo)`
 
 RUN rm -fr /tmp/opencv /tmp/opencv_contrib
+
+RUN python3 -m pip install --upgrade opencv-python
