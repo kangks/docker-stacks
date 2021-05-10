@@ -1,0 +1,7 @@
+[
+    //PasswordAuthenticator
+    {
+        "name": "local dse",
+        "contactPoints": ["127.0.0.1:9043"]
+    }
+]

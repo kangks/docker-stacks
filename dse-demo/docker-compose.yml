@@ -1,0 +1,41 @@
+version: '3.3'
+networks:
+  dse-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+          gateway: 172.21.0.100
+services:
+  dse-opscenter:
+    image: datastax/dse-opscenter:${DSE_VERSION}
+    ports:
+      - 8888:8888
+    environment:
+      SERVICE_8888_NAME: opsCenter
+      DS_LICENSE: accept    
+    networks:
+      dse-network:
+        ipv4_address: 172.21.0.20  
+  datastax-dse-1:
+    container_name: datastax-dse-1
+    image: datastax/dse-server:${DSE_VERSION}
+    environment:
+      - DS_LICENSE=accept
+      - DC=dc1
+      - RACK=rack1
+      - OPSCENTER_IP=172.21.0.20
+      - JVM_EXTRA_OPTS=-Xmx1g -Xms1g
+    links:
+      - dse-opscenter:opscenter
+    depends_on: 
+      - dse-opscenter
+    cap_add:
+      - IPC_LOCK
+    ulimits:
+      memlock: -1      
+    ports:
+      - "9042:9042"
+    networks:
+      dse-network:
+        ipv4_address: 172.21.0.11
