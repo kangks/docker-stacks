@@ -2,15 +2,16 @@
 
 ## Folder structure
 
+```
    .
    ├── .env                         # define the version of DSE to be used in the docker compose file
    ├── .cassandraWorkbench.jsonc    # the configuration for [Cassandra Workbench](https://github.com/kdcro101/vscode-cassandra)
    ├── docker-compose.yml           # Docker compose file
-
+```
 
 ## Note
 
-The `OpsCenter` needed the IP of the DSE cluster, thus using a fixed IP `172.21.0.11` is easier for the configuration
+The `OpsCenter` needed the IP of the DSE cluster, thus using a fixed IP [`172.21.0.11`](https://github.com/kangks/docker-stacks/blob/master/dse-demo/docker-compose.yml#L41) is easier for the configuration
 
 ## To Run
 1. git clone this repository
