@@ -1,4 +1,4 @@
-## DistributedECSTaskStack
+## SimpleGraphqlStack
 
 `lib/cdk-stack` builds the Docker image locally, push the image to `ECR` and provision the AWS Fargate to run the two simple `express-graphql` on HTTP
 
