@@ -1,21 +1,29 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
-import { CdkStack } from '../lib/cdk-stack';
+import * as path from 'path';
+import { EksClusterStack } from "../lib/eks-cluster-stack";
+import { EksFargateStack } from "../lib/eks-fargate-stack";
 
 const app = new cdk.App();
-new CdkStack(app, 'SimpleGraphqlFargate', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
-
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
-
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+const eksCluster = new EksClusterStack(app, 'SimpleEksFargateCluster', {
+  clusterName: "SimpleEksFargateCluster"
 });
+new EksFargateStack(app, 'userManagementFargate', {
+  cluster: eksCluster.cluster,
+  appName: "userManagement",
+  appNamespace: "default",
+  appPort: 4000,
+  appLocalFolder:  path.resolve(__dirname, '../../http-graphql'),
+  // appDockerFilename: "Dockerfile.userManagement"
+  appDockerFilename: "Dockerfile.accountManagement"
+})
+// new EksFargateStack.EksFargateStack(app, 'accountManagementFargate', {
+//   cluster: eksCluster.cluster,
+//   appName: "accountManagement",
+//   appNamespace: "accountManagementNS",
+//   appPort: 4000,
+//   appLocalFolder:  path.resolve(__dirname, '../../http-graphql'),
+//   appDockerFilename: "Dockerfile.accountManagement"
+// })

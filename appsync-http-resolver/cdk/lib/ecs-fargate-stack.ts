@@ -4,7 +4,7 @@ import iam = require("@aws-cdk/aws-iam");
 import { ApplicationLoadBalancedFargateService } from "@aws-cdk/aws-ecs-patterns";
 import path = require('path');
 
-export class CdkStack extends cdk.Stack {
+export class EcsFargateStack extends cdk.Stack {
   public readonly accountManagementUrl: cdk.CfnOutput
   public readonly userManagementUrl: cdk.CfnOutput
 

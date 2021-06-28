@@ -21,10 +21,17 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
+    "@aws-cdk/aws-appsync": "^1.109.0",
+    "@aws-cdk/aws-ec2": "^1.109.0",
     "@aws-cdk/aws-ecs": "^1.109.0",
     "@aws-cdk/aws-ecs-patterns": "^1.109.0",
+    "@aws-cdk/aws-eks": "^1.109.0",
     "@aws-cdk/aws-iam": "^1.109.0",
     "@aws-cdk/core": "1.109.0",
-    "source-map-support": "^0.5.16"
+    "@types/js-yaml": "^4.0.1",
+    "cdk8s": "^0.33.0",
+    "cdk8s-plus": "^0.33.0",
+    "source-map-support": "^0.5.16",
+    "sync-request": "^6.1.0"
   }
 }
