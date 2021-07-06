@@ -14,10 +14,10 @@ const clusterStack = new EksFargateClusterStack(app, inputs.EKSCLUSTER_STACKNAME
 
 new EksAppStack(app, 'app', {
   eksClusterStackName: inputs.EKSCLUSTER_STACKNAME,
-  appName: "userManagement",
+  appName: "calculator",
   appPort: 4000,
   appLocalFolder: path.resolve(__dirname, "../../http-graphql"),
-  appDockerFilename: "Dockerfile.userManagement",
+  appDockerFilename: "Dockerfile.calculator",
   env: {
     region: process.env.CDK_DEFAULT_REGION,
     account: process.env.CDK_DEFAULT_ACCOUNT

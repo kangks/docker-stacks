@@ -4,7 +4,7 @@ import * as ecrAssets from "@aws-cdk/aws-ecr-assets";
 import * as cdk8s from 'cdk8s';
 import * as ec2 from '@aws-cdk/aws-ec2';
 
-import { NamespaceChart } from './charts/namespace';
+import { EXPORTNAME_APP_INGRESSADDRESS } from './constants';
 import * as utils from './utils';
 
 export interface EksAppProps extends cdk.StackProps {
@@ -134,6 +134,17 @@ export class EksAppStack extends cdk.Stack {
                 cluster: existingCluster,
                 manifest: [ deployment, service, ingress ]
             });  
+
+            // query the ingress address
+            const myServiceAddress = new eks.KubernetesObjectValue(this, 'LoadBalancerAttribute', {
+                cluster: existingCluster,
+                objectType: 'ingress',
+                objectName: `${appName}-ingress`,
+                jsonPath: '.status.loadBalancer.ingress[0].hostname',
+            });
+
+            new cdk.CfnOutput(this, EXPORTNAME_APP_INGRESSADDRESS, {value: myServiceAddress.value, exportName: utils.getFullyQualifiedExportName(this.stackName, EXPORTNAME_APP_INGRESSADDRESS)});
+
         }
     }
 
