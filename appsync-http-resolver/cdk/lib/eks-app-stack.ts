@@ -38,7 +38,7 @@ export class EksAppStack extends cdk.Stack {
             const appName = cdk8s.Names.toDnsLabel(props.appName);
             const appNameLabel = cdk8s.Names.toLabelValue(props.appName);
 
-            const serviceName = `${appName}-service`;
+            const serviceName = `${appName}`;
 
             const repo = new ecrAssets.DockerImageAsset(this, `${appNameLabel}-ecr`, {
                 repositoryName: appNameLabel,
@@ -82,11 +82,7 @@ export class EksAppStack extends cdk.Stack {
                 apiVersion: "v1",
                 kind: "Service",
                 metadata: { 
-                    name: serviceName,
-                    annotations: {
-                        // route traffic directly to pod IPs
-                        "service.beta.kubernetes.io/aws-load-balancer-type": "nlb-ip"
-                    }
+                    name: serviceName
                 },
                 spec: {
                     type: "LoadBalancer",
@@ -105,9 +101,9 @@ export class EksAppStack extends cdk.Stack {
                     name: `${appName}-ingress`,
                     annotations: {
                         "kubernetes.io/ingress.class": "alb",
-                        "alb.ingress.kubernetes.io/scheme": "internet-facing",
-                        "alb.ingress.kubernetes.io/target-type": "ip",
-                        "alb.ingress.kubernetes.io/group.name": "app-ingress"
+                        "alb.ingress.kubernetes.io/scheme": "internet-facing",                        
+                        "alb.ingress.kubernetes.io/group.name": "app-ingress",
+                        "alb.ingress.kubernetes.io/target-type": "ip"
                     }
                 },
                 spec: {
