@@ -3,17 +3,23 @@ import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
 import * as path from 'path';
 import { EksFargateClusterStack } from "../lib/eks-fargatecluster-stack";
-import { EksFargateProfileStack } from '../lib/eks-fargate-profile-stack';
 import { EksAppStack } from "../lib/eks-app-stack";
-import {SHARED_EKSCLUSTER_STACKNAME, SHARED_EKSCLUSTER_NAME} from "../input/input";
+import * as inputs from "../input/input";
 
 const app = new cdk.App();
 
-new EksFargateClusterStack(app, SHARED_EKSCLUSTER_STACKNAME, {
-  clusterName: SHARED_EKSCLUSTER_NAME
+const clusterStack = new EksFargateClusterStack(app, inputs.EKSCLUSTER_STACKNAME, {
+  clusterName: "eksCluster"
 });
 
-new EksFargateProfileStack(app, 'appFargateProfile',{
-  appNamespace: "app",
+new EksAppStack(app, 'app', {
+  eksClusterStackName: inputs.EKSCLUSTER_STACKNAME,
+  appName: "userManagement",
+  appPort: 4000,
+  appLocalFolder: path.resolve(__dirname, "../../http-graphql"),
+  appDockerFilename: "Dockerfile.userManagement",
+  env: {
+    region: process.env.CDK_DEFAULT_REGION,
+    account: process.env.CDK_DEFAULT_ACCOUNT
+  }
 });
-

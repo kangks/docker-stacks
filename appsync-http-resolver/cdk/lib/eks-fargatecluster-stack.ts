@@ -3,10 +3,12 @@ import * as iam from '@aws-cdk/aws-iam';
 import * as eks from '@aws-cdk/aws-eks';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as cdk8s from 'cdk8s';
+import * as utils from './utils';
+
 import { AwsLoadBalancerController } from './aws-loadbalancer-controller';
 import { NamespaceChart } from './charts/namespace';
 import { AwsObservabilityConfigmap } from './charts/observability';
-import { SHARED_EKSCLUSTER_NAME,SHARED_EKSCLUSTER_ARN, SHARED_EKSCLUSTER_MASTERROLE_ARN} from "../input/input";
+import { EXPORTNAME_EKSCLUSTER_CLUSTERARN, EXPORTNAME_EKSCLUSTER_CLUSTERNAME, EXPORTNAME_EKSCLUSTER_MASTERROLEARN, EXPORTNAME_EKSCLUSTER_VPCID } from "./constants";
 
 export interface EksProps extends cdk.StackProps {
     clusterName?: string;
@@ -54,7 +56,7 @@ export class EksFargateClusterStack extends cdk.Stack {
     const cluster = new eks.FargateCluster(this, "fargate-cluster", {
       clusterName: props.clusterName,
       vpc: vpc,
-      version: eks.KubernetesVersion.V1_18,
+      version: eks.KubernetesVersion.V1_20,
       mastersRole: masterRole,
       coreDnsComputeType: eks.CoreDnsComputeType.FARGATE,
       endpointAccess: eks.EndpointAccess.PUBLIC,
@@ -68,19 +70,26 @@ export class EksFargateClusterStack extends cdk.Stack {
       }
     });
 
-    cluster.addCdk8sChart('aws-observability-namespace-chart', new NamespaceChart(this.cdk8sApp, "aws-observability", {name: "aws-observability"}));
-    cluster.addCdk8sChart('observability-configmap-chart',new AwsObservabilityConfigmap(this.cdk8sApp, "observability-configmap", { region: cluster.env.region }));
+    const observabilityNS = new NamespaceChart(this.cdk8sApp, "aws-observability", {name: "aws-observability"});
+    const observabilityConfig = new AwsObservabilityConfigmap(this.cdk8sApp, "observability-configmap", { region: cluster.env.region });
+    observabilityConfig.addDependency(observabilityNS);
+
+    cluster.addCdk8sChart(`aws-observability-ns`, observabilityNS);
+    cluster.addCdk8sChart(`aws-observability-configmap`, observabilityConfig);
 
     // Deploy AWS LoadBalancer Controller onto EKS.
-    new AwsLoadBalancerController(this, 'aws-loadbalancer-controller', {
+    const albController = new AwsLoadBalancerController(this, 'aws-loadbalancer-controller', {
         eksCluster: cluster,
         namespace: 'kube-system'
     });
+    albController.node.addDependency(observabilityNS);
 
+    // Exported values for post-creation cluster reference
     // Needed at least 2 attributes to reuse existing EKS cluster
     //  as per https://docs.aws.amazon.com/cdk/api/latest/docs/aws-eks-readme.html#using-existing-clusters
-    new cdk.CfnOutput(this, SHARED_EKSCLUSTER_NAME, {value: cluster.clusterName, exportName: `${this.stackName}:${SHARED_EKSCLUSTER_NAME}`});
-    new cdk.CfnOutput(this, SHARED_EKSCLUSTER_MASTERROLE_ARN, {value: masterRole.roleArn, exportName: `${this.stackName}:${SHARED_EKSCLUSTER_MASTERROLE_ARN}`});
-    new cdk.CfnOutput(this, SHARED_EKSCLUSTER_ARN, {value: cluster.clusterArn, exportName: `${this.stackName}:${SHARED_EKSCLUSTER_ARN}`});
+    new cdk.CfnOutput(this, EXPORTNAME_EKSCLUSTER_CLUSTERNAME, {value: cluster.clusterName, exportName: utils.getFullyQualifiedExportName(this.stackName, EXPORTNAME_EKSCLUSTER_CLUSTERNAME)});
+    new cdk.CfnOutput(this, EXPORTNAME_EKSCLUSTER_CLUSTERARN, {value: cluster.clusterArn, exportName: utils.getFullyQualifiedExportName(this.stackName, EXPORTNAME_EKSCLUSTER_CLUSTERARN)});
+    new cdk.CfnOutput(this, EXPORTNAME_EKSCLUSTER_VPCID, {value: cluster.vpc.vpcId, exportName: utils.getFullyQualifiedExportName(this.stackName, EXPORTNAME_EKSCLUSTER_VPCID)});
+    new cdk.CfnOutput(this, EXPORTNAME_EKSCLUSTER_MASTERROLEARN, {value: cluster.kubectlRole?.roleArn || "", exportName: utils.getFullyQualifiedExportName(this.stackName, EXPORTNAME_EKSCLUSTER_MASTERROLEARN)});
   }
 }

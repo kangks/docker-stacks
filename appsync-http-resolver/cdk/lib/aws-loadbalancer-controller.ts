@@ -4,12 +4,8 @@ import * as iam from '@aws-cdk/aws-iam';
 
 export interface AwsLoadBalancerControllerProps {
     eksCluster: eks.ICluster;
-    namespace: string;
-
-}
-
-interface HelmValues {
-    [key: string]: unknown;
+    // default 'kube-system'
+    namespace?: string;
 }
 
 export class AwsLoadBalancerController extends cdk.Construct {
@@ -25,7 +21,7 @@ export class AwsLoadBalancerController extends cdk.Construct {
         
         // install AWS load balancer via Helm charts
         const awsControllerPolicyUrl = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json";
-        const albNamespace = 'kube-system';
+        const albNamespace = props.namespace? props.namespace : 'kube-system';
         const albServiceAccount = cluster.addServiceAccount('aws-load-balancer-controller', {
             name: 'aws-load-balancer-controller',
             namespace: albNamespace,
