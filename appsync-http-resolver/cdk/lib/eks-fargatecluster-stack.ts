@@ -6,7 +6,6 @@ import * as cdk8s from 'cdk8s';
 import * as utils from './utils';
 
 import { AwsLoadBalancerController } from './aws-loadbalancer-controller';
-import { NamespaceChart } from './charts/namespace';
 import { AwsObservabilityConfigmap } from './charts/observability';
 import { EXPORTNAME_EKSCLUSTER_CLUSTERARN, EXPORTNAME_EKSCLUSTER_CLUSTERNAME, EXPORTNAME_EKSCLUSTER_MASTERROLEARN, EXPORTNAME_EKSCLUSTER_VPCID } from "./constants";
 
@@ -70,11 +69,8 @@ export class EksFargateClusterStack extends cdk.Stack {
       }
     });
 
-    const observabilityNS = new NamespaceChart(this.cdk8sApp, "aws-observability", {name: "aws-observability"});
     const observabilityConfig = new AwsObservabilityConfigmap(this.cdk8sApp, "observability-configmap", { region: cluster.env.region });
-    observabilityConfig.addDependency(observabilityNS);
 
-    cluster.addCdk8sChart(`aws-observability-ns`, observabilityNS);
     cluster.addCdk8sChart(`aws-observability-configmap`, observabilityConfig);
 
     // Deploy AWS LoadBalancer Controller onto EKS.
@@ -82,7 +78,6 @@ export class EksFargateClusterStack extends cdk.Stack {
         eksCluster: cluster,
         namespace: 'kube-system'
     });
-    albController.node.addDependency(observabilityNS);
 
     // Exported values for post-creation cluster reference
     // Needed at least 2 attributes to reuse existing EKS cluster

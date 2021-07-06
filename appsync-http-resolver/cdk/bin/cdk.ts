@@ -9,7 +9,7 @@ import * as inputs from "../input/input";
 const app = new cdk.App();
 
 const clusterStack = new EksFargateClusterStack(app, inputs.EKSCLUSTER_STACKNAME, {
-  clusterName: "eksCluster"
+  clusterName: "eksCluster120"
 });
 
 new EksAppStack(app, 'app', {

@@ -9,6 +9,7 @@ export interface AwsLoadBalancerControllerProps {
 }
 
 export class AwsLoadBalancerController extends cdk.Construct {
+
     constructor(
         scope: cdk.Construct,
         id: string,

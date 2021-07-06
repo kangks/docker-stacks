@@ -38,6 +38,8 @@ export class EksAppStack extends cdk.Stack {
             const appName = cdk8s.Names.toDnsLabel(props.appName);
             const appNameLabel = cdk8s.Names.toLabelValue(props.appName);
 
+            const serviceName = `${appName}-service`;
+
             const repo = new ecrAssets.DockerImageAsset(this, `${appNameLabel}-ecr`, {
                 repositoryName: appNameLabel,
                 directory: props.appLocalFolder,
@@ -80,7 +82,11 @@ export class EksAppStack extends cdk.Stack {
                 apiVersion: "v1",
                 kind: "Service",
                 metadata: { 
-                    name: `${appName}-service`,
+                    name: serviceName,
+                    annotations: {
+                        // route traffic directly to pod IPs
+                        "service.beta.kubernetes.io/aws-load-balancer-type": "nlb-ip"
+                    }
                 },
                 spec: {
                     type: "LoadBalancer",
@@ -91,6 +97,7 @@ export class EksAppStack extends cdk.Stack {
                 }
             };
 
+            // https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource
             const ingress = {
                 apiVersion: "networking.k8s.io/v1",
                 kind: "Ingress",
@@ -99,7 +106,8 @@ export class EksAppStack extends cdk.Stack {
                     annotations: {
                         "kubernetes.io/ingress.class": "alb",
                         "alb.ingress.kubernetes.io/scheme": "internet-facing",
-                        "alb.ingress.kubernetes.io/target-type": "ip"    
+                        "alb.ingress.kubernetes.io/target-type": "ip",
+                        "alb.ingress.kubernetes.io/group.name": "app-ingress"
                     }
                 },
                 spec: {
@@ -108,10 +116,15 @@ export class EksAppStack extends cdk.Stack {
                             "http": {
                                 paths: [
                                     {
-                                        path: "/*",
+                                        path: "/",
+                                        pathType: "Prefix",
                                         backend: {
-                                            serviceName: `${appNameLabel}-service`,
-                                            servicePort: 80                  
+                                            service: {
+                                                name: serviceName,
+                                                port: {
+                                                    number: 80
+                                                }    
+                                            }
                                         }
                                     }
                                 ]

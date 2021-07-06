@@ -1,6 +1,7 @@
 import * as constructs from 'constructs';
 import * as cdk8s from 'cdk8s';
 import * as kplus from 'cdk8s-plus';
+import { NamespaceChart } from './namespace';
 
 export interface AwsObservabilityConfigmapProps {
   region: string
@@ -10,7 +11,9 @@ export class AwsObservabilityConfigmap extends cdk8s.Chart {
   constructor(scope: constructs.Construct, id: string, props: AwsObservabilityConfigmapProps) {
     super(scope, id);
 
-    new kplus.ConfigMap(this, 'observability',{
+    const observabilityNS = new NamespaceChart(this, "aws-observability", {name: "aws-observability"});
+    
+    const configMap = new kplus.ConfigMap(this, 'observability',{
       "metadata": {
         "name": "aws-logging",
         "namespace": "aws-observability"
@@ -25,5 +28,6 @@ export class AwsObservabilityConfigmap extends cdk8s.Chart {
       auto_create_group true`
       }
     });
+    
   }
 }
